@@ -1,4 +1,4 @@
-let gameTick, createCache, toCreate, sessionData, simulateLoop, saveData;
+let gameTick, createCache, toCreate, sessionData, simulateLoop, saveData, caches;
 
 function generateGame() {
     if (generateConfig.seed < 0 || generateConfig.seed > 1e10) generateConfig.seed = Math.floor(Math.random()*1e10);
@@ -13,11 +13,16 @@ function generateGame() {
     }
     saveData = sessionData.saveData;
     saveData.layers = {};
+
+    caches = {};
+    caches.layerName = [];
     for (const layer in generateConfig.layers) {
         generateConfig.layers[layer] = new Layer(generateConfig.layers[layer]);
         sessionData.totalContents += generateConfig.layers[layer].upgrade.length;
         sessionData.layers[layer] = {};
         sessionData.layers[layer].upgrade = 0;
+
+        caches.layerName.push(layer);
 
         saveData.layerUnlocked = 0;
         saveData.layers[layer] = {
@@ -39,6 +44,7 @@ function simulateGameTick() {
         const thisLayer = generateConfig.layers[layer];
         const thisSave = saveData.layers[layer];
 
+        // upgrade, buy
         for (let i = 0, l = thisLayer.upgrade.length; i < l; i++) {
             if (!thisSave.upgradeBought.includes(i) && typeof thisLayer.upgrade[i].cost !== "undefined" && thisSave.resource.gt(thisLayer.upgrade[i].cost)) {
                 thisSave.resource = thisSave.resource.sub(thisLayer.upgrade[i].cost);
@@ -50,6 +56,7 @@ function simulateGameTick() {
             }
         }
 
+        // make upgrade
         const upgradeIdx = sessionData.layers[layer].upgrade;
         if (
             thisLayer.upgrade.length > sessionData.layers[layer].upgrade &&
@@ -65,6 +72,7 @@ function simulateGameTick() {
             sessionData.layers[layer].upgrade++;
         }
 
+        // increment resource
         thisSave.resource = thisSave.resource.add(thisLayer.baseResourceGenerate.mul(layerResMult[layer]).mul(generateConfig.speed/1000));
     }
     displayGenerated();
@@ -77,6 +85,7 @@ function simulateGameTick() {
 
 function displayGenerated() {
     let displayTxt = "";
+    displayTxt += `You've spent ${Spl.timeNotation(sessionData.timeSpent/1000)} in this game<br><br>`;
     for (const layer in generateConfig.layers) {
         displayTxt += `You have ${notation(saveData.layers[layer].resource)} ${generateConfig.layers[layer].resourceName} (${generateConfig.layers[layer].shortResourceName})<br>`;
         displayTxt += `${sessionData.layers[layer].upgrade}/${generateConfig.layers[layer].upgrade.length} Upgrades generated so far...<br>`;

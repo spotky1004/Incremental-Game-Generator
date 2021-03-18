@@ -5,7 +5,8 @@ const Spdl = {
         number = new D(number);
         if (number.lt(1e5)) return number.toNumber().toFixed(decimalFix);
         if (number.lt(new D(10).pow(new D(10).pow(exponentialFix)))) return number.toExponential(exponentialFix).replace("+", "");
-        return "e" + number.log(10).floor(0);
+        if (number.lt("1eeeeeeeeee10")) return "e" + number.log(10).floor(0);
+        return number.valueOf();
     },
     clearify: function(number) {
         number = new D(number);
