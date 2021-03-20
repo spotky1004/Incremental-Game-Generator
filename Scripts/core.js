@@ -18,20 +18,26 @@ class gameGenerator {
         this.caches = {};
         caches.layerName = [];
 
-        Object.keys(this.config.layers).forEach((layer, idx) => {
-            this.config.layers[layer] = new Layer(this.config.layers[layer], idx);
+        let idx = 0;
+        for (const layer in this.config.layers) {
+            this.config.layers[layer] = new Layer(this.config.layers[layer], idx, this.config);
             this.sessionData.totalContents += this.config.layers[layer].upgrade.length;
-            this.sessionData.layers[layer] = {};
-            this.sessionData.layers[layer].upgrade = 0;
+            this.sessionData.layers[layer] = {
+                upgrade: 0,
+                resetCount: 0,
+                prevReset: new D(0),
+                prevResetTime:-1
+            };
 
             caches.layerName.push(layer);
+            
+            this.saveData.layers[layer] = createDefaultLayerSave();
 
-            this.saveData.layerUnlocked = 0;
-            this.saveData.layers[layer] = {
-                resource: new D(0),
-                upgradeBought: []
-            };
-        })
+            this.config.layers[layer].unlock.when = this.config.layers[layer].unlock.when.bind(this);
+            this.config.layers[layer].unlock.whenUnlocked = this.config.layers[layer].unlock.whenUnlocked.bind(this);
+
+            idx++;
+        }
 
         this.simulateLoop = undefined;
 
@@ -39,7 +45,7 @@ class gameGenerator {
     }
 
     start() {
-        this.simulateLoop = setInterval(() => {this.generateTick()}, 10);
+        this.simulateLoop = setInterval(() => {this.generateTick()}, this.config.runSpeed);
 
         return this;
     }
@@ -61,10 +67,22 @@ class gameGenerator {
 
         let layerResMult = {};
         for (const layer in cfg.layers) {
-            layerResMult[layer] = new D(1);
-            const thisLayer = cfg.layers[layer];
-            const thisSave = this.saveData.layers[layer];
+            // short var set
+            let thisLayer = cfg.layers[layer];
+            let thisSave = this.saveData.layers[layer];
 
+            
+            // layer
+            if (!thisSave.unlocked && thisLayer.unlock.when()) {
+                thisSave.unlocked = thisLayer.unlock.when();
+                thisLayer.unlock.whenUnlocked();
+            }
+
+
+            // inner layer
+            if (!thisSave.unlocked) continue;
+            layerResMult[layer] = new D(1);
+            
             // upgrade, buy
             for (let i = 0, l = thisLayer.upgrade.length; i < l; i++) {
                 if (!thisSave.upgradeBought.includes(i) && typeof thisLayer.upgrade[i].cost !== "undefined" && thisSave.resource.gt(thisLayer.upgrade[i].cost)) {
@@ -83,10 +101,8 @@ class gameGenerator {
                 thisLayer.upgrade.length > sd.layers[layer].upgrade &&
                 sd.deltaTimeSpent/1000 > this.getLayerDifficulty(thisLayer)*(0.4+((cfg.seed+upgradeIdx**5)%24)/4)
             ) {
-                thisSave.upgradeBought.push(upgradeIdx);
                 thisLayer.upgrade[upgradeIdx].cost = new D(thisSave.resource);
                 if (cfg.clearify) thisLayer.upgrade[upgradeIdx].cost = Spdl.clearify(thisLayer.upgrade[upgradeIdx].cost);
-                thisSave.resource = thisSave.resource.sub(thisLayer.upgrade[upgradeIdx].cost);
 
                 sd.deltaTimeSpent = 0;
                 sd.contentUnlocked++;
@@ -104,14 +120,29 @@ class gameGenerator {
         }
     }
 
+    prestige (targetLayer) {
+        for (const layer in this.saveData.layers) {
+            let thisLayer = this.saveData.layers[layer];
+            if (targetLayer.index <= thisLayer.index) continue;
+            layer = createDefaultLayerSave();
+        }
+    }
+
     displayGenerated() {
         let displayTxt = "";
-        displayTxt += `You've spent ${Spl.timeNotation(this.sessionData.timeSpent/1000)} in this game<br><br>`;
+        displayTxt += `You've spent ${Spl.timeNotation(this.sessionData.timeSpent/1000)} in this game<br>Difficulty: ${notation(this.getSessionDifficulty())}<br><br>`;
         for (const layer in this.config.layers) {
-            displayTxt += `You have ${notation(this.saveData.layers[layer].resource)} ${this.config.layers[layer].resourceName} (${this.config.layers[layer].shortResourceName})<br>`;
-            displayTxt += `${this.sessionData.layers[layer].upgrade}/${this.config.layers[layer].upgrade.length} Upgrades generated so far...<br>`;
+            const thisLayer = this.config.layers[layer];
+            const thisSave = this.saveData.layers[layer];
+
+            if (!thisSave.unlocked) displayTxt += "<del>";
+            displayTxt += `You have ${notation(thisSave.resource)} ${thisLayer.resourceName} (${thisLayer.shortResourceName})<br>`;
+            displayTxt += `${this.sessionData.layers[layer].upgrade}/${thisLayer.upgrade.length} Upgrades generated so far...<br>`;
+            displayTxt += `Difficulty: ${notation(this.getLayerDifficulty(thisLayer))}<br>`;
             displayTxt += "<br>";
+            if (!thisSave.unlocked) displayTxt += "</del>";
         }
+
         document.getElementById("generateDisplay").innerHTML = displayTxt;
     }
 
@@ -122,4 +153,12 @@ class gameGenerator {
     getSessionDifficulty() {
         return this.config.difficulty+this.sessionData.contentUnlocked*this.config.deltaDifficulty;
     }
+}
+
+function createDefaultLayerSave() {
+    return {
+        resource: new D(0),
+        upgradeBought: [],
+        unlocked: 0
+    };
 }
