@@ -1,3 +1,5 @@
+"use strict";
+
 let generateConfig = {
     gameName: "basicIncremental",
     layers: {
@@ -25,17 +27,13 @@ let generateConfig = {
     clearify: true, // make generated values clear. ex) 1.2345e8324 -> 1.2e8324
 }
 
-let gameData = {};
-
-let layerIndex = 0;
 class Layer {
-    constructor(attr={}) {
+    constructor(attr={}, layerIdx) {
         this.name = attr.name || "Basic"; // name of the layer
         this.resourceName = this.resourceName || attr.name + " Point";
         this.shortResourceName = this.resourceName.includes(" ") ? this.resourceName.split(" ").reduce((a, b) => a+b[0], "").toUpperCase() : this.resourceName;
 
-        this.index = typeof attr.index !== "undefined" ? attr.index : layerIndex; // index of layer (it's better to don't change this)
-        layerIndex++;
+        this.index = attr.index || layerIdx; // index of layer (it's better to not change this)
 
         this.upgrade = []; // define upgrade
         for (let i = 0; i < attr.upgradeCount; i++) this.upgrade.push(new Upgrade(this.index, this.upgrade.length)); // fill upgrades
@@ -44,12 +42,6 @@ class Layer {
         
         this.difficultyMultiply = typeof attr.difficultyMultiply !== "undefined" ? attr.difficultyMultiply : 1;
         this.baseResourceGenerate = attr.baseResourceGenerate || new D(0);
-    }
-
-    
-
-    getDifficulty() {
-        return (getDifficulty() || generateConfig.difficulty)*this.difficultyMultiply;
     }
 }
 

@@ -1,6 +1,13 @@
+"use strict";
+
 let windowBlured = false;
 window.blur = () => windowBlured = true;
 window.focus = () => windowBlured = false;
+
+// for who want to use time more effective...
+
+// Number related: romanize, timeNotation
+// Etc.          : timer, copyObj
 
 const Spl = {
     timer: ms => new Promise(
@@ -9,6 +16,7 @@ const Spl = {
         }
     ),
     romanize: function(num) {
+        // I got this function from somewhere in stackoverflow where I can't remember...
         if (num == 0) {
           return '0';
         }
@@ -34,5 +42,22 @@ const Spl = {
         if (sec > 60) return `${(sec/60).toFixed(2)}m`;
         if (sec > 1) return `${(sec).toFixed(1)}s`;
         return `${(sec*1000).toFixed(0)}ms`;
+    },
+    copyObj: function (obj) {
+      let cObject = {};
+      for (let i in obj) {
+        if (Array.isArray(obj[i])) {
+          cObject[i] = [];
+          const tempArr = obj[i];
+          for (let j = 0, l = tempArr.length; j < l; j++) {
+            cObject[i].push(tempArr[j]);
+          }
+        } else if (typeof obj[i] === "object") {
+          cObject[i] = this.copyObj(obj[i]);
+        } else {
+          cObject[i] = obj[i];
+        }
+      }
+      return cObject;
     }
 }
