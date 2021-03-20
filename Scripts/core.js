@@ -34,14 +34,20 @@ class gameGenerator {
         })
 
         this.simulateLoop = undefined;
+
+        return this;
     }
 
     start() {
         this.simulateLoop = setInterval(() => {this.generateTick()}, 10);
+
+        return this;
     }
 
     stop() {
         clearInterval(this.simulateLoop);
+
+        return this;
     }
 
     generateTick() {
