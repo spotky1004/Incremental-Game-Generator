@@ -14,78 +14,63 @@ let generateConfig = {
                     return this.saveData.layers.basic.upgradeBought.length >= 50
                 },
                 whenUnlocked: function() {
-                    this.config.layers.basic.difficultyMultiply = this.config.layers.basic.difficultyMultiply*20;
+                    this.config.layers.basic.difficultyMultiply = this.config.layers.basic.difficultyMultiply*7;
                     this.config.difficulty /= 3;
                 }
             },
             name: "Advanced",
             upgradeCount: 250,
-            difficultyMultiply: 6
+            difficultyMultiply: 3
         },
         mastered: {
             unlock: {
                 when: function() {
-                    return this.saveData.layers.advenced.upgradeBought.length >= 30
-                },
-                whenUnlocked: function() {
-                    this.config.layers.advenced.difficultyMultiply = this.config.layers.advenced.difficultyMultiply*4;
+                    return this.saveData.layers.advenced.upgradeBought.length >= 25
                 }
             },
             name: "Mastered",
             upgradeCount: 200,
-            difficultyMultiply: 7
+            difficultyMultiply: 4
         },
         transcended: {
             unlock: {
                 when: function() {
-                    return this.saveData.layers.mastered.upgradeBought.length >= 40
-                },
-                whenUnlocked: function() {
-                    this.config.layers.mastered.difficultyMultiply = this.config.layers.mastered.difficultyMultiply*3;
+                    return this.saveData.layers.mastered.upgradeBought.length >= 25
                 }
             },
             name: "Transcended",
             upgradeCount: 150,
-            difficultyMultiply: 9
+            difficultyMultiply: 5
         },
         "Ran Out": {
             unlock: {
                 when: function() {
-                    return this.saveData.layers.transcended.upgradeBought.length >= 50
-                },
-                whenUnlocked: function() {
-                    this.config.layers.transcended.difficultyMultiply = this.config.layers.transcended.difficultyMultiply*4;
+                    return this.saveData.layers.transcended.upgradeBought.length >= 25
                 }
             },
             name: "Ran Out",
             upgradeCount: 100,
-            difficultyMultiply: 11
+            difficultyMultiply: 6
         },
         "of Layer": {
             unlock: {
                 when: function() {
-                    return this.saveData.layers["Ran Out"].upgradeBought.length >= 30
-                },
-                whenUnlocked: function() {
-                    this.config.layers["Ran Out"].difficultyMultiply = this.config.layers["Ran Out"].difficultyMultiply*4;
+                    return this.saveData.layers["Ran Out"].upgradeBought.length >= 25
                 }
             },
             name: "of Layer",
             upgradeCount: 80,
-            difficultyMultiply: 11
+            difficultyMultiply: 7
         },
         "Name Idea lol": {
             unlock: {
                 when: function() {
-                    return this.saveData.layers["of Layer"].upgradeBought.length >= 40
-                },
-                whenUnlocked: function() {
-                    this.config.layers["of Layer"].difficultyMultiply = this.config.layers["of Layer"].difficultyMultiply*4;
+                    return this.saveData.layers["of Layer"].upgradeBought.length >= 25
                 }
             },
             name: "Name Idea lol",
             upgradeCount: 60,
-            difficultyMultiply: 13
+            difficultyMultiply: 8
         }
     }, // data of layers
     contents: 0, //
