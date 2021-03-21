@@ -19,7 +19,7 @@ let generateConfig = {
                 }
             },
             name: "Advanced",
-            upgradeCount: 200,
+            upgradeCount: 250,
             difficultyMultiply: 6
         },
         mastered: {
@@ -32,7 +32,7 @@ let generateConfig = {
                 }
             },
             name: "Mastered",
-            upgradeCount: 100,
+            upgradeCount: 200,
             difficultyMultiply: 7
         },
         transcended: {
@@ -45,8 +45,47 @@ let generateConfig = {
                 }
             },
             name: "Transcended",
-            upgradeCount: 60,
+            upgradeCount: 150,
             difficultyMultiply: 9
+        },
+        "Ran Out": {
+            unlock: {
+                when: function() {
+                    return this.saveData.layers.transcended.upgradeBought.length >= 50
+                },
+                whenUnlocked: function() {
+                    this.config.layers.transcended.difficultyMultiply = this.config.layers.transcended.difficultyMultiply*4;
+                }
+            },
+            name: "Ran Out",
+            upgradeCount: 100,
+            difficultyMultiply: 11
+        },
+        "of Layer": {
+            unlock: {
+                when: function() {
+                    return this.saveData.layers["Ran Out"].upgradeBought.length >= 30
+                },
+                whenUnlocked: function() {
+                    this.config.layers["Ran Out"].difficultyMultiply = this.config.layers["Ran Out"].difficultyMultiply*4;
+                }
+            },
+            name: "of Layer",
+            upgradeCount: 80,
+            difficultyMultiply: 11
+        },
+        "Name Idea lol": {
+            unlock: {
+                when: function() {
+                    return this.saveData.layers["of Layer"].upgradeBought.length >= 40
+                },
+                whenUnlocked: function() {
+                    this.config.layers["of Layer"].difficultyMultiply = this.config.layers["of Layer"].difficultyMultiply*4;
+                }
+            },
+            name: "Name Idea lol",
+            upgradeCount: 60,
+            difficultyMultiply: 13
         }
     }, // data of layers
     contents: 0, //
