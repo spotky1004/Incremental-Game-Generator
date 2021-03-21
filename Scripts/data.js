@@ -5,7 +5,7 @@ let generateConfig = {
     layers: {
         basic: {
             name: "Basic",
-            upgradeCount: 100,
+            upgradeCount: 300,
             baseResourceGenerate: new D(1)
         },
         advenced: {
@@ -19,15 +19,41 @@ let generateConfig = {
                 }
             },
             name: "Advanced",
-            upgradeCount: 0,
+            upgradeCount: 200,
             difficultyMultiply: 6
+        },
+        mastered: {
+            unlock: {
+                when: function() {
+                    return this.saveData.layers.advenced.upgradeBought.length >= 30
+                },
+                whenUnlocked: function() {
+                    this.config.layers.advenced.difficultyMultiply = this.config.layers.advenced.difficultyMultiply*4;
+                }
+            },
+            name: "Mastered",
+            upgradeCount: 100,
+            difficultyMultiply: 7
+        },
+        transcended: {
+            unlock: {
+                when: function() {
+                    return this.saveData.layers.mastered.upgradeBought.length >= 40
+                },
+                whenUnlocked: function() {
+                    this.config.layers.mastered.difficultyMultiply = this.config.layers.mastered.difficultyMultiply*3;
+                }
+            },
+            name: "Transcended",
+            upgradeCount: 60,
+            difficultyMultiply: 9
         }
     }, // data of layers
     contents: 0, //
     difficulty: 2.6, // this is affect to progress speed (highter -> longer)
     deltaDifficulty: 0.02, // difficulty increases over progress (def. difficulty += deltaDifficulty)
     seed: -1, // seed, -1 to random (0 ~ 1e10)
-    speed: 800, // generate speed in ms/loop, increasing this will cause quality down
+    speed: 2000, // generate speed in ms/loop, increasing this will cause quality down
     runSpeed: 10, // generate function will loop per 'x ms'
     clearify: true, // make generated values clear. ex) 1.2345e8324 -> 1.2e8324
 }
@@ -67,9 +93,9 @@ class Upgrade extends LayerContents {
         this.index = upgradeIdx;
 
         const innerSeed = config.seed+this.index**2;
-        const upgradeTemple = upgradeVariety[innerSeed%(Math.min(upgradeVariety.length+2+this.layerIdx, upgradeVariety.length))];
+        const upgradeTemple = upgradeVariety[innerSeed%(Math.min(upgradeVariety.length+this.layerIdx, upgradeVariety.length))];
         
-        this.boost = upgradeTemple.boost(innerSeed, this.index);
+        this.boost = upgradeTemple.boost({seed: innerSeed, index: this.index});
         this.desc = upgradeTemple.desc;
         this.cost = undefined;
         this.boostType = upgradeTemple.boostType;
@@ -96,7 +122,7 @@ const upgradeVariety = [
     // 0
     {
         desc: `Multiply $Rescource gain by x$Boost`,
-        boost: function(seed, index) {return new Function(`return new D(${seed}%6+4).pow(Math.pow(${index}+1, 0.4)).floor(0)`)},
+        boost: function(attr={}) {return new Function(`return new D(${attr.seed}%6+4).pow(new D(${attr.index}+1).pow(0.8)).floor(0)`)},
         boostType: "mul"
     }
 ];
