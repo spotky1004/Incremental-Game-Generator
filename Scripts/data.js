@@ -30,7 +30,7 @@ let generateConfig = {
             },
             name: "Mastered",
             upgradeCount: 200,
-            difficultyMultiply: 4
+            difficultyMultiply: 2.9
         },
         transcended: {
             unlock: {
@@ -40,7 +40,7 @@ let generateConfig = {
             },
             name: "Transcended",
             upgradeCount: 150,
-            difficultyMultiply: 5
+            difficultyMultiply: 2.8
         },
         "Ran Out": {
             unlock: {
@@ -50,7 +50,7 @@ let generateConfig = {
             },
             name: "Ran Out",
             upgradeCount: 100,
-            difficultyMultiply: 6
+            difficultyMultiply: 2.7
         },
         "of Layer": {
             unlock: {
@@ -60,7 +60,7 @@ let generateConfig = {
             },
             name: "of Layer",
             upgradeCount: 80,
-            difficultyMultiply: 7
+            difficultyMultiply: 2.6
         },
         "Name Idea lol": {
             unlock: {
@@ -70,7 +70,7 @@ let generateConfig = {
             },
             name: "Name Idea lol",
             upgradeCount: 60,
-            difficultyMultiply: 8
+            difficultyMultiply: 2.5
         }
     }, // data of layers
     contents: 0, //

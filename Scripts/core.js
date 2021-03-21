@@ -147,7 +147,7 @@ class gameGenerator {
                         break;
                     case 1:
                         tempGot = new D(thisLayer.index+1).pow(2);
-                        thisSession.prestigeGainPow = D.min(0.5, new D(1).div(prevRes.div(thisSession.prestigeGainReq).log(tempGot)));
+                        thisSession.prestigeGainPow = D.min(0.3, new D(1).div(prevRes.div(thisSession.prestigeGainReq).log(tempGot)));
                         break;
                     default:
                         tempGot = this.getPrestigeGain(thisLayer);
@@ -174,6 +174,7 @@ class gameGenerator {
     }
 
     prestige (targetLayer) {
+        return;
         for (const layer in this.saveData.layers) {
             let thisLayer = this.config.layers[layer];
             if (targetLayer.index <= thisLayer.index) continue;
