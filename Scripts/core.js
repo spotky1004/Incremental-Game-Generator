@@ -16,7 +16,7 @@ class gameGenerator {
         this.saveData.layers = {};
 
         this.caches = {};
-        caches.layerName = [];
+        this.caches.layerName = [];
 
         let idx = 0;
         for (const layer in this.config.layers) {
@@ -24,12 +24,13 @@ class gameGenerator {
             this.sessionData.totalContents += this.config.layers[layer].upgrade.length;
             this.sessionData.layers[layer] = {
                 upgrade: 0,
+                prestigeGainReq: new D(0),
+                prestigeGainExponent: undefined,
                 resetCount: 0,
-                prevReset: new D(0),
-                prevResetTime:-1
+                prevResetTime: -1
             };
 
-            caches.layerName.push(layer);
+            this.caches.layerName.push(layer);
             
             this.saveData.layers[layer] = createDefaultLayerSave();
 
@@ -70,12 +71,47 @@ class gameGenerator {
             // short var set
             let thisLayer = cfg.layers[layer];
             let thisSave = this.saveData.layers[layer];
+            let thisSession = sd.layers[layer];
 
             
             // layer
             if (!thisSave.unlocked && thisLayer.unlock.when()) {
                 thisSave.unlocked = thisLayer.unlock.when();
                 thisLayer.unlock.whenUnlocked();
+            }
+
+            // prestige
+            if (
+                thisLayer.index != 0 &&
+                thisLayer.unlock.when() &&
+                (new Date().getTime()-thisSession.prevResetTime)/1000 > this.getLayerDifficulty(thisLayer)
+            ) {
+                let prevLayer = this.saveData.layers[this.caches.layerName[thisLayer.index-1]];
+                const prevRes = prevLayer.resource;
+                let tempGot;
+
+                if (prevRes.lt(thisSession.prestigeGainReq)) return;
+
+                switch (thisSession.resetCount) {
+                    case 0:
+                        tempGot = new D(1);
+                        thisSession.prestigeGainReq = new D(prevRes);
+                        if (this.config.clearify) thisSession.prestigeGainReq = Spdl.clearify(thisSession.prestigeGainReq);
+                        break;
+                    case 1:
+                        tempGot = new D(thisLayer.index+1).pow(2);
+                        console.log(prevRes.div(thisSession.prestigeGainReq).log(tempGot));
+                        thisSession.prestigeGainPow = new D(1).div(prevRes.div(thisSession.prestigeGainReq).log(tempGot));
+                        break;
+                    default:
+                        tempGot = prevRes.div(thisSession.prestigeGainReq).pow(thisSession.prestigeGainPow);
+                }
+                
+                thisSession.prevResetTime = new Date().getTime();
+                thisSave.resource = thisSave.resource.add(tempGot);
+                thisSession.resetCount++;
+                sd.contentUnlocked++;
+                this.prestige(thisLayer);
             }
 
 
@@ -99,6 +135,7 @@ class gameGenerator {
             const upgradeIdx = sd.layers[layer].upgrade;
             if (
                 thisLayer.upgrade.length > sd.layers[layer].upgrade &&
+                (upgradeIdx == 0 || thisSave.resource.gt(thisLayer.upgrade[sd.layers[layer].upgrade-1].cost)) &&
                 sd.deltaTimeSpent/1000 > this.getLayerDifficulty(thisLayer)*(0.4+((cfg.seed+upgradeIdx**5)%24)/4)
             ) {
                 thisLayer.upgrade[upgradeIdx].cost = new D(thisSave.resource);
@@ -114,17 +151,17 @@ class gameGenerator {
         }
         this.displayGenerated();
 
-        if (sd.totalContents == sd.contentUnlocked) {
+        /*if (sd.totalContents == sd.contentUnlocked) {
             clearInterval(this.simulateLoop);
             document.getElementById("generateDisplay").innerHTML = "done!<br><br>turn into a html file isn't supported yet...";
-        }
+        }*/
     }
 
     prestige (targetLayer) {
         for (const layer in this.saveData.layers) {
-            let thisLayer = this.saveData.layers[layer];
+            let thisLayer = this.config.layers[layer];
             if (targetLayer.index <= thisLayer.index) continue;
-            layer = createDefaultLayerSave();
+            this.saveData.layers[layer] = createDefaultLayerSave();
         }
     }
 
@@ -134,10 +171,12 @@ class gameGenerator {
         for (const layer in this.config.layers) {
             const thisLayer = this.config.layers[layer];
             const thisSave = this.saveData.layers[layer];
+            const thisSession = this.sessionData.layers[layer];
 
             if (!thisSave.unlocked) displayTxt += "<del>";
             displayTxt += `You have ${notation(thisSave.resource)} ${thisLayer.resourceName} (${thisLayer.shortResourceName})<br>`;
-            displayTxt += `${this.sessionData.layers[layer].upgrade}/${thisLayer.upgrade.length} Upgrades generated so far...<br>`;
+            if (thisLayer.index != 0) displayTxt += `Prestige gain factor: /${notation(thisSession.prestigeGainReq)}, ^${notation(thisSession.prestigeGainPow)}<br>`;
+            displayTxt += `${this.sessionData.layers[layer].upgrade}/${thisLayer.upgrade.length} Upgrades generated so far... (have ${thisSave.upgradeBought.length} now)<br>`;
             displayTxt += `Difficulty: ${notation(this.getLayerDifficulty(thisLayer))}<br>`;
             displayTxt += "<br>";
             if (!thisSave.unlocked) displayTxt += "</del>";

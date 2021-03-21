@@ -1,7 +1,7 @@
 "use strict";
 
 let generateConfig = {
-    gameName: "basicIncremental",
+    gameName: "basicIncremental", // id of game; localStorage key = "IGG" + gameName
     layers: {
         basic: {
             name: "Basic",
@@ -19,14 +19,15 @@ let generateConfig = {
                 }
             },
             name: "Advanced",
-            upgradeCount: 0
+            upgradeCount: 0,
+            difficultyMultiply: 6
         }
     }, // data of layers
     contents: 0, //
-    difficulty: 3, // this is affect to progress speed (highter -> longer)
-    deltaDifficulty: 0.04, // difficulty increases over progress (def. difficulty += deltaDifficulty)
+    difficulty: 2.6, // this is affect to progress speed (highter -> longer)
+    deltaDifficulty: 0.02, // difficulty increases over progress (def. difficulty += deltaDifficulty)
     seed: -1, // seed, -1 to random (0 ~ 1e10)
-    speed: 300, // generate speed in ms/loop, increasing this will cause quality down
+    speed: 800, // generate speed in ms/loop, increasing this will cause quality down
     runSpeed: 10, // generate function will loop per 'x ms'
     clearify: true, // make generated values clear. ex) 1.2345e8324 -> 1.2e8324
 }

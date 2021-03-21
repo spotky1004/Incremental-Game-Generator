@@ -18,7 +18,7 @@ const Spdl = {
     clearify: function(number) {
         number = new D(number);
         if (number.lt(1000)) return number.floor(0);
-        if (number.lt(1e100)) return number.div(new D(10).pow(number.log(10).sub(1))).floor(0).div(10).mul(new D(10).pow(number.log(10)));
+        if (number.lt(1e100)) return new D(number.toExponential(2));
         return number;
     },
     copyObj: function (obj) {
