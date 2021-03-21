@@ -73,44 +73,11 @@ class gameGenerator {
             let thisLayer = cfg.layers[layer];
             let thisSave = this.saveData.layers[layer];
             let thisSession = sd.layers[layer];
-
             
             // layer
             if (!thisSession.unlocked && thisLayer.unlock.when()) {
                 thisSession.unlocked = thisLayer.unlock.when();
                 thisLayer.unlock.whenUnlocked();
-            }
-
-            // prestige
-            if (
-                thisLayer.index != 0 &&
-                thisLayer.unlock.when() &&
-                (new Date().getTime()-thisSession.prevResetTime)*this.config.speed > 10e3 &&
-                (thisSession.resetCount < 1 || this.saveData.layers[this.caches.layerName[thisLayer.index-1]].resource.gt(thisSession.prestigeGainReq)) &&
-                (thisSession.resetCount < 2 || thisSave.resource.eq(0) || thisSave.resource.mul(1.5).pow(1.04).lt(this.getPrestigeGain(thisLayer)) )
-            ) {
-                let prevLayer = this.saveData.layers[this.caches.layerName[thisLayer.index-1]];
-                const prevRes = prevLayer.resource;
-                let tempGot;
-
-                switch (thisSession.resetCount) {
-                    case 0:
-                        tempGot = new D(1);
-                        thisSession.prestigeGainReq = new D(prevRes);
-                        if (this.config.clearify) thisSession.prestigeGainReq = Spdl.clearify(thisSession.prestigeGainReq);
-                        break;
-                    case 1:
-                        tempGot = new D(thisLayer.index+1).pow(2);
-                        thisSession.prestigeGainPow = new D(1).div(prevRes.div(thisSession.prestigeGainReq).log(tempGot));
-                        break;
-                    default:
-                        tempGot = this.getPrestigeGain(thisLayer);
-                }
-                
-                thisSession.prevResetTime = new Date().getTime();
-                thisSave.resource = thisSave.resource.add(tempGot);
-                thisSession.resetCount++;
-                this.prestige(thisLayer);
             }
 
 
@@ -149,11 +116,52 @@ class gameGenerator {
             layerResMult[layer] = layerResMult[layer].mul(this.getResourceMultiplayer(thisLayer));
         }
 
-        // increment resource
+        // increment resource, prestige
         for (const layer in cfg.layers) {
             let thisLayer = cfg.layers[layer];
             let thisSave = this.saveData.layers[layer];
+            let thisSession = sd.layers[layer];
 
+            // prestige
+            if (
+                thisLayer.index != 0 &&
+                thisLayer.unlock.when() &&
+                (new Date().getTime()-thisSession.prevResetTime)*this.config.speed > 10e3 &&
+                (thisSession.resetCount < 1 || this.saveData.layers[this.caches.layerName[thisLayer.index-1]].resource.gt(thisSession.prestigeGainReq)) &&
+                (
+                    thisSession.resetCount < 2 ||
+                    thisSave.resource.eq(0) ||
+                    (new Date().getTime()-thisSession.prevResetTime)*this.config.speed > 3000e3 ||
+                    thisSave.resource.mul(1.5).pow(1.04).lt(this.getPrestigeGain(thisLayer))
+                )
+            ) {
+                let prevLayer = this.saveData.layers[this.caches.layerName[thisLayer.index-1]];
+                const prevRes = prevLayer.resource;
+                let tempGot;
+
+                switch (thisSession.resetCount) {
+                    case 0:
+                        tempGot = new D(1);
+                        thisSession.prestigeGainReq = new D(prevRes);
+                        if (this.config.clearify) thisSession.prestigeGainReq = Spdl.clearify(thisSession.prestigeGainReq);
+                        break;
+                    case 1:
+                        tempGot = new D(thisLayer.index+1).pow(2);
+                        thisSession.prestigeGainPow = D.min(0.5, new D(1).div(prevRes.div(thisSession.prestigeGainReq).log(tempGot)));
+                        break;
+                    default:
+                        tempGot = this.getPrestigeGain(thisLayer);
+                }
+
+                tempGot = tempGot.mul(layerResMult[layer]);
+                
+                thisSession.prevResetTime = new Date().getTime();
+                thisSave.resource = thisSave.resource.add(tempGot);
+                thisSession.resetCount++;
+                this.prestige(thisLayer);
+            }
+
+            // increment resource
             thisSave.resource = thisSave.resource.add(thisLayer.baseResourceGenerate.mul(layerResMult[layer]).mul(cfg.speed/1000));
         }
 

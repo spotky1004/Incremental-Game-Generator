@@ -146,7 +146,7 @@ const upgradeVariety = [
     // 0
     {
         desc: `Multiply $Rescource gain by x$Boost`,
-        boost: function(attr={}) {return new Function(`return new D(${attr.seed}%6+4).pow(new D(${attr.index}+1).pow(0.8)).floor(0)`)},
+        boost: function(attr={}) {return new Function(`return new D(${attr.seed}%6+4).pow(new D(${attr.index}+1).pow(0.4)).floor(0)`)},
         boostType: "mul"
     }
 ];
